@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Financial Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f7fb; --card-bg: #ffffff; --primary: #4f46e5; --primary-hover: #4338ca;
+            --text-main: #111827; --text-muted: #6b7280; --border-color: #e5e7eb;
+            --success: #10b981; --success-bg: #d1fae5; --danger: #ef4444;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; box-sizing: border-box; }
+        .landing-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .google-btn { display: inline-flex; align-items: center; background-color: var(--card-bg); color: var(--text-main); font-weight: 600; padding: 12px 24px; border-radius: 8px; text-decoration: none; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.2s; }
+        .google-btn:hover { background-color: #f9fafb; transform: translateY(-1px); }
+        .dashboard-wrapper { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .logout-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+        .logout-btn:hover { background: var(--border-color); color: var(--text-main); }
+        .grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); border: 1px solid var(--border-color); padding: 24px; margin-bottom: 24px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 24px; }
+        .metric-title { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;}
+        .metric-value { font-size: 2rem; font-weight: 700; color: var(--text-main); margin: 0; }
+        .target-card { background: var(--primary); color: white; border: none; }
+        .target-card .metric-title, .target-card .metric-value { color: white; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .table-header h3 { margin: 0; font-size: 1.1rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 12px 16px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+        td { padding: 16px; border-bottom: 1px solid var(--border-color); font-size: 0.875rem; vertical-align: middle; }
+        .desc-text { font-weight: 500; color: var(--text-main); }
+        .badge { background: var(--success-bg); color: var(--success); padding: 4px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .amt-text { font-weight: 600; color: var(--text-main); }
+        .delete-btn { color: var(--text-muted); text-decoration: none; font-size: 1.1rem; transition: color 0.2s;}
+        .delete-btn:hover { color: var(--danger); }
+        .form-header { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; }
+        input, select { width: 100%; padding: 10px 12px; margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; font-size: 0.875rem; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); }
+        .flex-row { display: flex; gap: 16px; }
+        .flex-col { flex: 1; }
+        .submit-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .submit-btn:hover { background: var(--primary-hover); }
+        .footer { display: flex; justify-content: space-between; padding-top: 24px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; font-weight: 500; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div sec:authorize="isAnonymous()" class="landing-container">
+    <h1 style="color: var(--text-main); margin-bottom: 8px;">Financial Systems Center</h1>
+    <p style="color: var(--text-muted); margin-bottom: 32px;">Secure, first-principle financial tracking.</p>
+    <a href="/oauth2/authorization/google" class="google-btn">
+        <svg style="width: 20px; height: 20px; margin-right: 12px;" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+    </a>
+</div>
+
+<div sec:authorize="isAuthenticated()" class="dashboard-wrapper">
+
+    <div class="top-nav">
+        <h2 style="margin:0; font-size:1.25rem;">Welcome back, <span th:text="${userName}">User</span></h2>
+        <form th:action="@{/logout}" method="post" style="margin:0;">
+            <button type="submit" class="logout-btn">Sign Out</button>
+        </form>
+    </div>
+
+    <div class="summary-grid">
+        <div class="card" style="margin-bottom:0;">
+            <div class="metric-title">Remaining Balance</div>
+            <div class="metric-value" th:style="${remainingBalance < 0} ? 'color: var(--danger);' : ''" th:text="'$' + ${#numbers.formatDecimal(remainingBalance, 1, 2)}">$0.00</div>
+            <div style="color: var(--success); font-size: 0.875rem; font-weight: 500; margin-top: 8px;">Based on Monthly Income</div>
+        </div>
+
+        <div class="card" style="margin-bottom:0;">
+            <div class="metric-title"><span th:text="${currentMonth}">MONTH</span> Spending</div>
+            <div class="metric-value">$<span th:text="${#numbers.formatDecimal(total, 1, 2)}">0.00</span></div>
+            <div style="background: var(--border-color); height: 6px; border-radius: 3px; margin-top: 12px; overflow: hidden;">
+                <div th:style="'background: var(--primary); height: 100%; width: ' + ${spendingPercentage} + '%; max-width: 100%;'"></div>
+            </div>
+        </div>
+
+        <div class="card target-card" style="margin-bottom:0;">
+            <div class="metric-title">Savings Target</div>
+            <div class="metric-value">$<span th:text="${#numbers.formatDecimal(settings.savingsTarget, 1, 0)}">0</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-top:12px;">
+                <span>Progress to Goal</span>
+                <span th:text="${#numbers.formatDecimal(savingsProgress, 1, 0)} + '%'">0%</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.3); height: 6px; border-radius: 3px; margin-top: 4px; overflow: hidden;">
+                <div th:style="'background: white; height: 100%; width: ' + ${savingsProgress} + '%; border-radius: 3px;'"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-layout">
+        <div>
+            <div class="card">
+                <div class="table-header">
+                    <h3>Recent Transactions</h3>
+                    <span style="color: var(--primary); font-size: 0.875rem; font-weight: 500; cursor: pointer;">↻ Sync Status</span>
+                </div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="expense : ${expenses}">
+                        <td>
+                            <div class="desc-text" th:text="${expense.description}">Desc</div>
+                            <div style="color: var(--text-muted); font-size: 0.75rem;">ID: TX-<span th:text="${expense.id}"></span></div>
+                        </td>
+                        <td><span class="badge" th:text="${expense.category}">Cat</span></td>
+                        <td th:text="${expense.expenseDate}">Date</td>
+                        <td class="amt-text" th:text="'$' + ${#numbers.formatDecimal(expense.amount, 1, 2)}">0.00</td>
+                        <td><a class="delete-btn" th:href="@{/delete/{id}(id=${expense.id})}" title="Delete">🗑</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <div class="form-header">Quick Add Expense</div>
+                <form action="#" th:action="@{/add}" th:object="${newExpense}" method="post">
+                    <label>Description</label>
+                    <input type="text" th:field="*{description}" placeholder="e.g. Server Hosting" required />
+                    <div class="flex-row">
+                        <div class="flex-col">
+                            <label>Amount ($)</label>
+                            <input type="number" step="0.01" th:field="*{amount}" placeholder="0.00" required />
+                        </div>
+                        <div class="flex-col">
+                            <label>Category</label>
+                            <input type="text" th:field="*{category}" placeholder="e.g. Tech" required />
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn">SAVE EXPENSE</button>
+                </form>
+            </div>
+
+            <div class="card" style="border: 2px dashed var(--border-color);">
+                <div class="form-header" style="color: var(--primary);">Update Financial Goals</div>
+                <form action="#" th:action="@{/updateSettings}" th:object="${settings}" method="post">
+                    <div class="flex-row">
+                        <div class="flex-col">
+                            <label>Monthly Income</label>
+                            <input type="number" step="0.01" th:field="*{monthlyIncome}" required />
+                        </div>
+                        <div class="flex-col">
+                            <label>Savings Target</label>
+                            <input type="number" step="0.01" th:field="*{savingsTarget}" required />
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn" style="background: var(--text-main);">APPLY GOALS</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="form-header">Expense Distribution</div>
+
+                <div th:each="entry, stat : ${categoryTotals}" style="margin-bottom: 16px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.875rem; font-weight:600; margin-bottom:4px;">
+                        <span><span th:style="'color: hsl(' + ${stat.index * 60} + ', 70%, 50%)'">●</span> <span th:text="${entry.key}">Category</span></span>
+                        <span th:text="${#numbers.formatDecimal((total > 0 ? (entry.value / total) * 100 : 0), 1, 0)} + '%'">0%</span>
+                    </div>
+                    <div style="background: var(--border-color); height: 4px; border-radius: 2px;">
+                        <div th:style="'background: hsl(' + ${stat.index * 60} + ', 70%, 50%); height: 100%; width: ' + ${(total > 0 ? (entry.value / total) * 100 : 0)} + '%;'"></div>
+                    </div>
+                </div>
+
+                <div th:if="${categoryTotals.isEmpty()}" style="color: var(--text-muted); font-size: 0.875rem;">
+                    No expenses logged this month yet.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
